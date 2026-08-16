@@ -1,0 +1,13 @@
+# MySQL Workbench backup files
+*.mwb.bak
+*.mwbhistory/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Local config
+*.local
+
+# Large raw data (uncomment if the Kaggle CSV is too large to commit)
+# raw_data/*.csv
