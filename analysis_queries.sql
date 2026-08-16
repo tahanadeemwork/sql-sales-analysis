@@ -48,6 +48,7 @@ GROUP BY c.customer_id, c.customer_name
 ORDER BY total_spend DESC
 LIMIT 5;
 
+-- FR6: Revenue by region
 SELECT
     o.region,
     SUM(od.sales) AS total_revenue
@@ -56,6 +57,7 @@ JOIN OrderDetails od ON o.order_id = od.order_id
 GROUP BY o.region
 ORDER BY total_revenue DESC;
 
+-- FR6: Revenue by category
 SELECT
     p.category,
     SUM(od.sales) AS total_revenue
@@ -64,6 +66,7 @@ JOIN Products p ON od.product_id = p.product_id
 GROUP BY p.category
 ORDER BY total_revenue DESC;
 
+-- FR7: Month-over-month growth rate using LAG()
 WITH monthly_revenue AS (
     SELECT
         YEAR(o.order_date) AS order_year,
@@ -86,6 +89,7 @@ SELECT
 FROM monthly_revenue
 ORDER BY order_year, order_month;
 
+-- FR8: Running total of revenue using SUM() OVER
 WITH monthly_revenue AS (
     SELECT
         YEAR(o.order_date) AS order_year,
@@ -103,6 +107,7 @@ SELECT
 FROM monthly_revenue
 ORDER BY order_year, order_month;
 
+-- FR11: Product ranking within each category by revenue using RANK()
 SELECT
     p.category,
     p.product_name,
@@ -113,6 +118,7 @@ JOIN Products p ON od.product_id = p.product_id
 GROUP BY p.category, p.product_name
 ORDER BY p.category, revenue_rank;
 
+-- FR9: Churn-style query — customers active in one year but not the next
 WITH customer_years AS (
     SELECT DISTINCT
         o.customer_id,
@@ -130,6 +136,7 @@ LEFT JOIN customer_years cy_next
 WHERE cy_next.customer_id IS NULL
 ORDER BY cy_prev.order_year, cy_prev.customer_id;
 
+-- FR10: Average order value trend over time
 WITH order_totals AS (
     SELECT
         o.order_id,
