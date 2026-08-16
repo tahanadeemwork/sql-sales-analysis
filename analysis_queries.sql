@@ -112,3 +112,57 @@ FROM OrderDetails od
 JOIN Products p ON od.product_id = p.product_id
 GROUP BY p.category, p.product_name
 ORDER BY p.category, revenue_rank;
+
+WITH customer_years AS (
+    SELECT DISTINCT
+        o.customer_id,
+        YEAR(o.order_date) AS order_year
+    FROM Orders o
+)
+SELECT
+    cy_prev.customer_id,
+    cy_prev.order_year AS active_year,
+    cy_prev.order_year + 1 AS churned_in_year
+FROM customer_years cy_prev
+LEFT JOIN customer_years cy_next
+    ON cy_prev.customer_id = cy_next.customer_id
+    AND cy_next.order_year = cy_prev.order_year + 1
+WHERE cy_next.customer_id IS NULL
+ORDER BY cy_prev.order_year, cy_prev.customer_id;
+
+WITH order_totals AS (
+    SELECT
+        o.order_id,
+        YEAR(o.order_date) AS order_year,
+        MONTH(o.order_date) AS order_month,
+        SUM(od.sales) AS order_value
+    FROM Orders o
+    JOIN OrderDetails od ON o.order_id = od.order_id
+    GROUP BY o.order_id, order_year, order_month
+)
+SELECT
+    order_year,
+    order_month,
+    ROUND(AVG(order_value), 2) AS avg_order_value
+FROM order_totals
+GROUP BY order_year, order_month
+ORDER BY order_year, order_month;
+
+-- ============================================
+-- FR12: Self-authored question —
+-- Which sub-category has the highest average discount,
+-- and does heavy discounting correlate with lower profit?
+-- Justification: discounting drives sales volume but can silently erode
+-- margin — a stakeholder deciding discount policy needs to see this tradeoff
+-- directly, not just revenue in isolation.
+-- ============================================
+SELECT
+    p.sub_category,
+    ROUND(AVG(od.discount), 3) AS avg_discount,
+    ROUND(SUM(od.profit), 2) AS total_profit,
+    ROUND(SUM(od.sales), 2) AS total_revenue,
+    ROUND(SUM(od.profit) / SUM(od.sales) * 100, 2) AS profit_margin_pct
+FROM OrderDetails od
+JOIN Products p ON od.product_id = p.product_id
+GROUP BY p.sub_category
+ORDER BY avg_discount DESC;
